@@ -24,10 +24,34 @@ export default function App() {
 		setHasPermission(status === "granted");
 	};
 
+	const predict_caption = async () => {
+		const form = new FormData();
+
+		form.append("image", {
+			uri: photo,
+			type: "image/jpg",
+			name: "image.jpg",
+		});
+
+		const response = await fetch("https://...", {
+			method: "POST",
+			body: form,
+		});
+
+		const data = await response.json();
+
+		const caption = data.caption;
+
+		console.log(caption);
+	};
+
 	const __takePicture = async () => {
 		if (!camera) return;
 		const photo = await camera.takePictureAsync();
 		console.log(photo);
+
+		predict_caption(photo);
+
 		setPreviewVisible(true);
 		setCapturedImage(photo);
 	};

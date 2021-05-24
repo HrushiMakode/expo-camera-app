@@ -50,6 +50,7 @@ export default function App() {
 			console.log("Genrating Caption.......");
 			console.log(data);
 			Speech.speak(data);
+			setPreviewVisible(false);
 		} catch (error) {
 			console.log(error.message);
 		}
@@ -117,61 +118,18 @@ export default function App() {
 			retakePicture={__retakePicture}
 		/>
 	) : (
-		<View style={styles.container}>
-			<Camera
-				style={styles.camera}
-				type={type}
-				ref={(ref) => {
-					camera = ref;
-				}}
-			>
-				<View
-					style={{
-						position: "absolute",
-						bottom: 0,
-						flexDirection: "row",
-						flex: 1,
-						width: "100%",
-						padding: 20,
-						justifyContent: "space-between",
-					}}
-				>
-					<View
-						style={{
-							alignSelf: "center",
-							flex: 1,
-							alignItems: "center",
-						}}
-					>
-						<TouchableOpacity
-							activeOpacity={0.5}
-							onPress={__takePicture}
-							style={{
-								width: 70,
-								height: 70,
-								bottom: 0,
-								borderRadius: 50,
-								backgroundColor: "#fff",
-							}}
-						/>
-					</View>
-				</View>
-				<View style={styles.buttonContainer}>
-					<TouchableOpacity
-						style={styles.button}
-						onPress={() => {
-							setType(
-								type === Camera.Constants.Type.back
-									? Camera.Constants.Type.front
-									: Camera.Constants.Type.back
-							);
-						}}
-					>
-						<Text style={styles.text}> Flip </Text>
-					</TouchableOpacity>
-				</View>
-			</Camera>
-		</View>
+		<Camera
+			style={{ height: "100%", width: "100%" }}
+			type={type}
+			ref={(ref) => {
+				camera = ref;
+			}}
+		>
+			<TouchableOpacity
+				style={{ width: "100%", height: "100%" }}
+				onPress={__takePicture}
+			></TouchableOpacity>
+		</Camera>
 	);
 }
 

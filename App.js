@@ -3,6 +3,7 @@ import React, { useState, useRef } from "react";
 import { StyleSheet, Text, View, ImageBackground } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Camera } from "expo-camera";
+import * as Speech from "expo-speech";
 
 export default function App() {
 	const [hasPermission, setHasPermission] = useState(null);
@@ -24,25 +25,34 @@ export default function App() {
 		setHasPermission(status === "granted");
 	};
 
-	const predict_caption = async () => {
-		const form = new FormData();
-
-		form.append("image", {
-			uri: photo,
-			type: "image/jpg",
+	const predict_caption = async (uri) => {
+		let formData = new FormData();
+		formData.append("file", {
+			uri,
 			name: "image.jpg",
+			type: "image/jpeg",
 		});
 
-		const response = await fetch("https://...", {
+		let options = {
 			method: "POST",
-			body: form,
-		});
+			body: formData,
+			headers: {
+				Accept: "/",
+				"Content-Type": "multipart/form-data",
+			},
+		};
 
-		const data = await response.json();
+		const apiUrl = "https://cryptic-beach-09117.herokuapp.com/predict";
 
-		const caption = data.caption;
-
-		console.log(caption);
+		try {
+			const res = await fetch(apiUrl, options);
+			const data = await res.text();
+			console.log("Genrating Caption.......");
+			console.log(data);
+			Speech.speak(data);
+		} catch (error) {
+			console.log(error.message);
+		}
 	};
 
 	const __takePicture = async () => {
@@ -50,7 +60,7 @@ export default function App() {
 		const photo = await camera.takePictureAsync();
 		console.log(photo);
 
-		predict_caption(photo);
+		predict_caption(photo.uri);
 
 		setPreviewVisible(true);
 		setCapturedImage(photo);

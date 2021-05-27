@@ -11,6 +11,7 @@ export default function App() {
 
 	const [previewVisible, setPreviewVisible] = useState(false);
 	const [capturedImage, setCapturedImage] = useState(null);
+	const [caption, setCaption] = useState("");
 
 	let camera;
 
@@ -45,12 +46,24 @@ export default function App() {
 		const apiUrl = "https://cryptic-beach-09117.herokuapp.com/predict";
 
 		try {
+			Speech.speak("Genrating Caption....");
 			const res = await fetch(apiUrl, options);
-			const data = await res.text();
+			const caption = await res.text();
+
 			console.log("Genrating Caption.......");
-			console.log(data);
-			Speech.speak(data);
-			setPreviewVisible(false);
+			console.log(caption);
+
+			Speech.speak(caption);
+			Speech.isSpeakingAsync()
+				.then((isfinshed) => {
+					if (isfinshed) {
+						Speech.speak("Long Press to take a Picture Again");
+					}
+				})
+				.catch((err) => {
+					console.error(err);
+				});
+			setCaption(caption);
 		} catch (error) {
 			console.log(error.message);
 		}
@@ -60,16 +73,15 @@ export default function App() {
 		if (!camera) return;
 		const photo = await camera.takePictureAsync();
 		console.log(photo);
-
-		predict_caption(photo.uri);
-
 		setPreviewVisible(true);
+		predict_caption(photo.uri);
 		setCapturedImage(photo);
 	};
 
 	const __savePhoto = () => {};
 
-	if (hasPermission === null) {
+	if (hasPermission == (null || false)) {
+		console.log(hasPermission);
 		return (
 			<View style={styles.container}>
 				<View
@@ -111,11 +123,15 @@ export default function App() {
 	if (hasPermission === false) {
 		return <Text>No access to camera</Text>;
 	}
+	if (!previewVisible)
+		Speech.speak("Tap Any Where on the Screen to Take Picture");
 	return previewVisible && capturedImage ? (
 		<CameraPreview
 			photo={capturedImage}
 			savePhoto={__savePhoto}
 			retakePicture={__retakePicture}
+			setPreviewVisible={setPreviewVisible}
+			caption={caption}
 		/>
 	) : (
 		<Camera
@@ -157,7 +173,13 @@ const styles = StyleSheet.create({
 	},
 });
 
-const CameraPreview = ({ photo, retakePicture, savePhoto }) => {
+const CameraPreview = ({
+	photo,
+	retakePicture,
+	savePhoto,
+	setPreviewVisible,
+	caption,
+}) => {
 	console.log("Photo Preview", photo);
 	return (
 		<View
@@ -174,60 +196,27 @@ const CameraPreview = ({ photo, retakePicture, savePhoto }) => {
 					flex: 1,
 				}}
 			>
-				<View
-					style={{
-						flex: 1,
-						flexDirection: "column",
-						padding: 15,
-						justifyContent: "flex-end",
+				<TouchableOpacity
+					style={{ width: "100%", height: "100%" }}
+					onLongPress={() => {
+						setPreviewVisible(false);
 					}}
 				>
-					<View
+					<Text
 						style={{
-							flexDirection: "row",
-							justifyContent: "space-between",
+							textAlign: "center", // <-- the magic
+							fontWeight: "bold",
+							justifyContent: "center",
+							fontSize: 28,
+							padding: 70,
+							height: "100%",
+							width: "100%",
+							color: "white",
 						}}
 					>
-						<TouchableOpacity
-							onPress={retakePicture}
-							style={{
-								width: 130,
-								height: 40,
-
-								alignItems: "center",
-								borderRadius: 4,
-							}}
-						>
-							<Text
-								style={{
-									color: "#fff",
-									fontSize: 20,
-								}}
-							>
-								Re-take
-							</Text>
-						</TouchableOpacity>
-						<TouchableOpacity
-							onPress={savePhoto}
-							style={{
-								width: 130,
-								height: 40,
-
-								alignItems: "center",
-								borderRadius: 4,
-							}}
-						>
-							<Text
-								style={{
-									color: "#fff",
-									fontSize: 20,
-								}}
-							>
-								save photo
-							</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
+						{caption}
+					</Text>
+				</TouchableOpacity>
 			</ImageBackground>
 		</View>
 	);

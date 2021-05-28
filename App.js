@@ -52,18 +52,23 @@ export default function App() {
 
 			console.log("Genrating Caption.......");
 			console.log(caption);
-
-			Speech.speak(caption);
-			Speech.isSpeakingAsync()
-				.then((isfinshed) => {
-					if (isfinshed) {
-						Speech.speak("Long Press to take a Picture Again");
-					}
-				})
-				.catch((err) => {
-					console.error(err);
-				});
-			setCaption(caption);
+			if (caption.length > 150) {
+				caption = "Heroku Server is Busy";
+				Speech.speak(caption);
+				setCaption(caption);
+			} else {
+				Speech.speak(caption);
+				Speech.isSpeakingAsync()
+					.then((isfinshed) => {
+						if (isfinshed) {
+							Speech.speak("Long Press to take a Picture Again");
+						}
+					})
+					.catch((err) => {
+						console.error(err);
+					});
+				setCaption(caption);
+			}
 		} catch (error) {
 			console.log(error.message);
 		}

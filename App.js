@@ -1,6 +1,12 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useState, useRef } from "react";
-import { StyleSheet, Text, View, ImageBackground } from "react-native";
+import {
+	StyleSheet,
+	Text,
+	ActivityIndicator,
+	View,
+	ImageBackground,
+} from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Camera } from "expo-camera";
 import * as Speech from "expo-speech";
@@ -48,27 +54,28 @@ export default function App() {
 		try {
 			Speech.speak("Genrating Caption....");
 			const res = await fetch(apiUrl, options);
-			const caption = await res.text();
+			let caption = await res.text();
 
 			console.log("Genrating Caption.......");
-			console.log(caption);
+			console.log(caption, caption.length);
 			if (caption.length > 150) {
+				console.log("Is it True");
 				caption = "Heroku Server is Busy";
 				Speech.speak(caption);
 				setCaption(caption);
 			} else {
 				Speech.speak(caption);
-				Speech.isSpeakingAsync()
-					.then((isfinshed) => {
-						if (isfinshed) {
-							Speech.speak("Long Press to take a Picture Again");
-						}
-					})
-					.catch((err) => {
-						console.error(err);
-					});
 				setCaption(caption);
 			}
+			Speech.isSpeakingAsync()
+				.then((isfinshed) => {
+					if (isfinshed) {
+						Speech.speak("Long Press to take a Picture Again");
+					}
+				})
+				.catch((err) => {
+					console.error(err);
+				});
 		} catch (error) {
 			console.log(error.message);
 		}
@@ -78,6 +85,7 @@ export default function App() {
 		if (!camera) return;
 		const photo = await camera.takePictureAsync();
 		console.log(photo);
+		setCaption("");
 		setPreviewVisible(true);
 		predict_caption(photo.uri);
 		setCapturedImage(photo);
@@ -137,7 +145,7 @@ export default function App() {
 			retakePicture={__retakePicture}
 			setPreviewVisible={setPreviewVisible}
 			caption={caption}
-		/>
+		></CameraPreview>
 	) : (
 		<Camera
 			style={{ height: "100%", width: "100%" }}
@@ -221,6 +229,13 @@ const CameraPreview = ({
 					>
 						{caption}
 					</Text>
+					{/* <View
+						style={{
+							justifyContent: "center",
+						}}
+					>
+						<ActivityIndicator size="large" color="#0000ff" />
+					</View> */}
 				</TouchableOpacity>
 			</ImageBackground>
 		</View>

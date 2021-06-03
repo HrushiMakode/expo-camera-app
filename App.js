@@ -81,13 +81,57 @@ export default function App() {
 		}
 	};
 
+	const predict_caption_from_an_API = async (uri) => {
+		let formData = new FormData();
+		formData.append("image", {
+			uri,
+			name: "image.jpg",
+			type: "image/jpeg",
+		});
+
+		let options = {
+			method: "POST",
+			body: formData,
+			headers: {
+				Accept: "/",
+				// "Content-Type": "multipart/form-data",
+			},
+		};
+
+		const apiUrl =
+			"http://max-image-caption-generator.codait-prod-41208c73af8fca213512856c7a09db52-0000.us-east.containers.appdomain.cloud/model/predict";
+
+		try {
+			Speech.speak("Genrating Caption....");
+			const res = await fetch(apiUrl, options);
+			const data = await res.json();
+			console.log("Genrating Caption.......");
+			console.log(data["predictions"]);
+			const caption = data["predictions"][0]["caption"];
+			Speech.speak(caption);
+			setCaption(caption);
+			Speech.isSpeakingAsync()
+				.then((isfinshed) => {
+					if (isfinshed) {
+						Speech.speak("Long Press to take a Picture Again");
+					}
+				})
+				.catch((err) => {
+					console.error(err);
+				});
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
 	const __takePicture = async () => {
 		if (!camera) return;
 		const photo = await camera.takePictureAsync();
 		console.log(photo);
 		setCaption("");
 		setPreviewVisible(true);
-		predict_caption(photo.uri);
+		// predict_caption(photo.uri);
+		predict_caption_from_an_API(photo.uri);
 		setCapturedImage(photo);
 	};
 

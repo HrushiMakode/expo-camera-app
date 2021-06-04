@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	StyleSheet,
 	Text,
@@ -13,24 +13,35 @@ import * as Speech from "expo-speech";
 
 export default function App() {
 	const [hasPermission, setHasPermission] = useState(null);
-	const [type, setType] = useState(Camera.Constants.Type.back);
-
 	const [previewVisible, setPreviewVisible] = useState(false);
 	const [capturedImage, setCapturedImage] = useState(null);
 	const [caption, setCaption] = useState("");
+	const [sayTap, setSayTap] = useState(true);
 
 	let camera;
+	const type = Camera.Constants.Type.back;
+
+	useEffect(() => {
+		const __startCamera = async () => {
+			const { status } = await Camera.requestPermissionsAsync();
+			setHasPermission(status === "granted");
+		};
+
+		__startCamera();
+	}, []);
 
 	const __retakePicture = () => {
+		// setSayTap(true);
+		Speech.speak("Tap Any Where on the Screen to Take Picture");
 		setCapturedImage(null);
 		setPreviewVisible(false);
-		__startCamera();
+		// __startCamera();
 	};
 
-	const __startCamera = async () => {
-		const { status } = await Camera.requestPermissionsAsync();
-		setHasPermission(status === "granted");
-	};
+	// const __startCamera = async () => {
+	//   const { status } = await Camera.requestPermissionsAsync();
+	//   setHasPermission(status === "granted");
+	// };
 
 	const predict_caption = async (uri) => {
 		let formData = new FormData();
@@ -125,6 +136,7 @@ export default function App() {
 	};
 
 	const __takePicture = async () => {
+		setSayTap(false);
 		if (!camera) return;
 		const photo = await camera.takePictureAsync();
 		console.log(photo);
@@ -135,57 +147,19 @@ export default function App() {
 		setCapturedImage(photo);
 	};
 
-	const __savePhoto = () => {};
-
-	if (hasPermission == (null || false)) {
-		console.log(hasPermission);
-		return (
-			<View style={styles.container}>
-				<View
-					style={{
-						flex: 1,
-						backgroundColor: "#fff",
-						justifyContent: "center",
-						alignItems: "center",
-					}}
-				>
-					<TouchableOpacity
-						onPress={__startCamera}
-						style={{
-							width: 130,
-							borderRadius: 4,
-							backgroundColor: "#14274e",
-							flexDirection: "row",
-							justifyContent: "center",
-							alignItems: "center",
-							height: 40,
-						}}
-					>
-						<Text
-							style={{
-								color: "#fff",
-								fontWeight: "bold",
-								textAlign: "center",
-							}}
-						>
-							Take picture
-						</Text>
-					</TouchableOpacity>
-				</View>
-
-				<StatusBar style="auto" />
-			</View>
-		);
+	if (hasPermission === null) {
+		return <View />;
 	}
 	if (hasPermission === false) {
 		return <Text>No access to camera</Text>;
 	}
-	if (!previewVisible)
+	if (sayTap) {
 		Speech.speak("Tap Any Where on the Screen to Take Picture");
+		setSayTap(false);
+	}
 	return previewVisible && capturedImage ? (
 		<CameraPreview
 			photo={capturedImage}
-			savePhoto={__savePhoto}
 			retakePicture={__retakePicture}
 			setPreviewVisible={setPreviewVisible}
 			caption={caption}
@@ -202,38 +176,14 @@ export default function App() {
 				style={{ width: "100%", height: "100%" }}
 				onPress={__takePicture}
 			></TouchableOpacity>
+			<StatusBar style="auto" />
 		</Camera>
 	);
 }
 
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
-	camera: {
-		flex: 1,
-	},
-	buttonContainer: {
-		flex: 1,
-		backgroundColor: "transparent",
-		flexDirection: "row",
-		margin: 20,
-	},
-	button: {
-		flex: 0.1,
-		alignSelf: "flex-end",
-		alignItems: "center",
-	},
-	text: {
-		fontSize: 18,
-		color: "white",
-	},
-});
-
 const CameraPreview = ({
 	photo,
 	retakePicture,
-	savePhoto,
 	setPreviewVisible,
 	caption,
 }) => {
@@ -255,9 +205,7 @@ const CameraPreview = ({
 			>
 				<TouchableOpacity
 					style={{ width: "100%", height: "100%" }}
-					onLongPress={() => {
-						setPreviewVisible(false);
-					}}
+					onLongPress={retakePicture}
 				>
 					<Text
 						style={{
@@ -282,6 +230,7 @@ const CameraPreview = ({
 					</View> */}
 				</TouchableOpacity>
 			</ImageBackground>
+			<StatusBar style="auto" />
 		</View>
 	);
 };
